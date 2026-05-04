@@ -1,0 +1,52 @@
+version: 1
+fields:
+  auth_users:
+    user_id_hash: authoritative
+    email: authoritative
+    display_name: authoritative
+    tenant_id: duplicated_pending_cleanup
+    is_admin: deprecated_authority
+  admin_users:
+    user_id_hash: authoritative
+    role: authoritative
+    is_active: authoritative
+  user_tenant_membership:
+    user_id_hash: authoritative_target
+    tenant_id: authoritative_target
+    status: authoritative
+    is_primary: authoritative_target
+  user_invitations:
+    invite_token_hash: authoritative
+    status: authoritative_but_ambiguous_lifecycle
+    expires_at: authoritative
+    accepted_at: authoritative
+    revoked_at: authoritative
+  password_reset_tokens:
+    user_id: live_schema_field_pending_cleanup
+    token_hash: authoritative
+    expires_at: authoritative
+    used_at: authoritative
+  type_detail:
+    user_id_hash: authoritative
+    structure: authoritative
+    answer_first: authoritative
+    tone_directness: authoritative
+    detail_level: authoritative
+    ambiguity_reduction: authoritative
+    exploration_level: authoritative
+    context_loading: authoritative
+    prompt_enforcement_level: authoritative
+    compliance_check_enabled: authoritative
+    pii_check_enabled: authoritative
+  final_profile:
+    user_id_hash: derived
+    structure: derived
+    answer_first: derived
+    tone_directness: derived
+    detail_level: derived
+    ambiguity_reduction: derived
+    exploration_level: derived
+    context_loading: derived
+    prompt_enforcement_level: derived
+    compliance_check_enabled: derived
+    pii_check_enabled: derived

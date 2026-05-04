@@ -1,0 +1,73 @@
+version: 1
+baseline_revision: "20260504_0006"
+tables:
+  - table_name: auth_users
+    class: core
+    write_owner: shared
+    readers: [Herman-Admin, herman_portal, herman-prompt, prompt_transformer]
+    authority_status: shared_but_duplicated
+    lifecycle: persistent
+    notes: Canonical platform identity table; tenant and admin authority require cleanup.
+  - table_name: admin_users
+    class: core
+    write_owner: Herman-Admin
+    readers: [Herman-Admin, herman_portal]
+    authority_status: authoritative
+    lifecycle: persistent
+    notes: Canonical admin entitlement table.
+  - table_name: user_tenant_membership
+    class: core
+    write_owner: Herman-Admin
+    readers: [Herman-Admin, herman_portal, herman-prompt]
+    authority_status: authoritative_target
+    lifecycle: persistent
+    notes: Intended canonical user-to-tenant membership table.
+  - table_name: user_invitations
+    class: shared-owned
+    write_owner: Herman-Admin
+    readers: [herman_portal]
+    authority_status: ambiguous_current_state
+    lifecycle: current_state_plus_history
+    notes: Needs cleanup to resolve duplicate current-state/history behavior.
+  - table_name: password_reset_tokens
+    class: app-local
+    write_owner: herman_portal
+    readers: [herman_portal]
+    authority_status: schema_drifted
+    lifecycle: expiring
+    notes: Portal-only token table with live schema/code mismatch.
+  - table_name: type_detail
+    class: core
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, herman-prompt, Herman-Admin]
+    authority_status: foundational_profile
+    lifecycle: persistent
+    notes: Foundational profile layer.
+  - table_name: final_profile
+    class: derived
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, herman-prompt, Herman-Admin]
+    authority_status: derived_runtime_authority
+    lifecycle: recomputable
+    notes: Runtime-effective profile derived from foundational and overlay layers.
+  - table_name: conversation_prompt_scores
+    class: derived
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, herman-prompt, Herman-Admin]
+    authority_status: derived
+    lifecycle: retention_policy_required
+    notes: Derived analytics with orphaned-row cleanup needed.
+  - table_name: conversations
+    class: shared-owned
+    write_owner: herman-prompt
+    readers: [herman-prompt, prompt_transformer, Herman-Admin]
+    authority_status: authoritative
+    lifecycle: persistent
+    notes: Canonical conversation header table.
+  - table_name: conversation_turns
+    class: shared-owned
+    write_owner: herman-prompt
+    readers: [herman-prompt, prompt_transformer, Herman-Admin]
+    authority_status: authoritative_with_derived_columns
+    lifecycle: persistent
+    notes: Canonical transcript rows.
