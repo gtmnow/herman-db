@@ -4,7 +4,7 @@ fields:
     user_id_hash: authoritative
     email: authoritative
     display_name: authoritative
-    tenant_id: duplicated_pending_cleanup
+    tenant_id: derived_primary_tenant_pointer
     is_admin: deprecated_authority
   admin_users:
     user_id_hash: authoritative
