@@ -56,9 +56,93 @@ def _orphan_admin_rows(bind: sa.Connection) -> list[dict[str, object]]:
     return [dict(row) for row in rows]
 
 
+def _matching_auth_user_id_hash_by_email(bind: sa.Connection, email: str | None) -> str | None:
+    normalized_email = str(email).strip().lower() if email else None
+    if not normalized_email:
+        return None
+
+    return bind.execute(
+        sa.text(
+            """
+            SELECT user_id_hash
+            FROM auth_users
+            WHERE lower(email) = :email
+            ORDER BY updated_at DESC, created_at DESC, id DESC
+            LIMIT 1
+            """
+        ),
+        {"email": normalized_email},
+    ).scalar_one_or_none()
+
+
+def _existing_admin_id_for_user_id_hash(bind: sa.Connection, *, user_id_hash: str, excluding_admin_id: str) -> str | None:
+    return bind.execute(
+        sa.text(
+            """
+            SELECT id
+            FROM admin_users
+            WHERE user_id_hash = :user_id_hash
+              AND id != :excluding_admin_id
+            ORDER BY created_at, id
+            LIMIT 1
+            """
+        ),
+        {"user_id_hash": user_id_hash, "excluding_admin_id": excluding_admin_id},
+    ).scalar_one_or_none()
+
+
 def _placeholder_email(user_id_hash: str) -> str:
     digest = hashlib.sha1(user_id_hash.encode("utf-8")).hexdigest()[:16]
     return f"legacy-admin-{digest}@herman.invalid"
+
+
+def _insert_placeholder_auth_user(
+    bind: sa.Connection,
+    *,
+    user_id_hash: str,
+    display_name: str | None,
+    email: str | None,
+    is_active: bool,
+    is_admin: bool,
+    now: datetime,
+) -> None:
+    bind.execute(
+        sa.text(
+            """
+            INSERT INTO auth_users (
+              email,
+              user_id_hash,
+              display_name,
+              tenant_id,
+              is_active,
+              is_admin,
+              created_at,
+              updated_at,
+              last_login_at
+            ) VALUES (
+              :email,
+              :user_id_hash,
+              :display_name,
+              :tenant_id,
+              :is_active,
+              :is_admin,
+              :created_at,
+              :updated_at,
+              NULL
+            )
+            """
+        ),
+        {
+            "email": str(email).strip() if email and str(email).strip() else _placeholder_email(user_id_hash),
+            "user_id_hash": user_id_hash,
+            "display_name": display_name.strip() if display_name else f"Legacy Admin {user_id_hash[:12]}",
+            "tenant_id": "tenant_demo",
+            "is_active": is_active,
+            "is_admin": is_admin,
+            "created_at": now,
+            "updated_at": now,
+        },
+    )
 
 
 def upgrade() -> None:
@@ -111,46 +195,64 @@ def upgrade() -> None:
         user_id_hash = str(orphan["user_id_hash"])
         profile_email = orphan.get("profile_email")
         profile_display_name = orphan.get("profile_display_name")
-        bind.execute(
-            sa.text(
-                """
-                INSERT INTO auth_users (
-                  email,
-                  user_id_hash,
-                  display_name,
-                  tenant_id,
-                  is_active,
-                  is_admin,
-                  created_at,
-                  updated_at,
-                  last_login_at
-                ) VALUES (
-                  :email,
-                  :user_id_hash,
-                  :display_name,
-                  :tenant_id,
-                  :is_active,
-                  :is_admin,
-                  :created_at,
-                  :updated_at,
-                  NULL
+
+        matching_auth_user_id_hash = _matching_auth_user_id_hash_by_email(bind, str(profile_email) if profile_email else None)
+        if matching_auth_user_id_hash is not None:
+            existing_admin_id = _existing_admin_id_for_user_id_hash(
+                bind,
+                user_id_hash=matching_auth_user_id_hash,
+                excluding_admin_id=str(orphan["id"]),
+            )
+            if existing_admin_id is not None:
+                bind.execute(
+                    sa.text(
+                        """
+                        UPDATE admin_users
+                        SET
+                          is_active = false,
+                          updated_at = :updated_at
+                        WHERE id = :admin_id
+                        """
+                    ),
+                    {
+                        "updated_at": now,
+                        "admin_id": orphan["id"],
+                    },
                 )
-                """
-            ),
-            {
-                "email": str(profile_email).strip() if profile_email else _placeholder_email(user_id_hash),
-                "user_id_hash": user_id_hash,
-                "display_name": (
-                    str(profile_display_name).strip()
-                    if profile_display_name
-                    else f"Legacy Admin {user_id_hash[:12]}"
+                _insert_placeholder_auth_user(
+                    bind,
+                    user_id_hash=user_id_hash,
+                    display_name=str(profile_display_name) if profile_display_name else None,
+                    email=None,
+                    is_active=False,
+                    is_admin=False,
+                    now=now,
+                )
+                continue
+
+            bind.execute(
+                sa.text(
+                    """
+                    UPDATE admin_users
+                    SET user_id_hash = :matching_user_id_hash
+                    WHERE id = :admin_id
+                    """
                 ),
-                "tenant_id": "tenant_demo",
-                "is_active": bool(orphan["is_active"]),
-                "is_admin": bool(orphan["is_active"]),
-                "created_at": now,
-                "updated_at": now,
-            },
+                {
+                    "matching_user_id_hash": matching_auth_user_id_hash,
+                    "admin_id": orphan["id"],
+                },
+            )
+            continue
+
+        _insert_placeholder_auth_user(
+            bind,
+            user_id_hash=user_id_hash,
+            display_name=str(profile_display_name) if profile_display_name else None,
+            email=str(profile_email) if profile_email else None,
+            is_active=bool(orphan["is_active"]),
+            is_admin=bool(orphan["is_active"]),
+            now=now,
         )
 
     # Keep the legacy auth_users.is_admin mirror aligned with authoritative
@@ -196,4 +298,3 @@ def downgrade() -> None:
 
     if ADMIN_USERS_AUTH_FK in foreign_keys:
         op.drop_constraint(ADMIN_USERS_AUTH_FK, "admin_users", type_="foreignkey")
-
