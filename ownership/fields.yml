@@ -74,3 +74,58 @@ fields:
     default_provider_type: customer_managed_only
     default_model_name: customer_managed_only
     default_endpoint_url: customer_managed_only
+  rag_quota_policies:
+    policy_key: authoritative
+    scope_target: authoritative
+    service_tier_definition_id: authoritative
+    tenant_id: authoritative
+    user_type: authoritative
+    org_max_file_bytes: authoritative
+    user_max_file_bytes: authoritative
+    org_max_document_count: authoritative
+    user_max_document_count: authoritative
+    org_max_total_bytes: authoritative
+    user_max_total_bytes: authoritative
+    org_max_extracted_text_bytes: authoritative
+    user_max_extracted_text_bytes: authoritative
+    org_max_chunks_per_document: authoritative
+    user_max_chunks_per_document: authoritative
+    org_max_retrieved_chunks: authoritative
+    user_max_retrieved_chunks: authoritative
+    max_retrieved_chunks_total: authoritative
+  rag_collections:
+    scope_type: authoritative
+    tenant_id: authoritative
+    user_id_hash: authoritative
+    retrieval_enabled: authoritative
+    max_results: authoritative
+  rag_documents:
+    collection_id: authoritative
+    scope_type: authoritative
+    tenant_id: authoritative
+    user_id_hash: authoritative
+    filename: authoritative
+    media_type: authoritative
+    size_bytes: authoritative
+    status: authoritative
+    status_message: authoritative
+    sha256: authoritative
+  rag_document_blobs:
+    document_id: authoritative
+    content_bytes: authoritative
+  rag_chunks:
+    document_id: derived
+    chunk_index: derived
+    chunk_text: derived
+    token_count: derived
+    embedding_vector: derived
+    embedding_model: derived
+  rag_retrieval_events:
+    conversation_id: derived
+    user_id_hash: derived
+    tenant_id: derived
+    scope_type: derived
+    document_id: derived
+    chunk_id: derived
+    rank: derived
+    score: derived

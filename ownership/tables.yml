@@ -71,6 +71,48 @@ tables:
     authority_status: normalized_template
     lifecycle: persistent
     notes: Template layer remains intentionally parallel to tenant runtime tables, but platform-managed LLM defaults no longer store duplicated provider/model/endpoint values.
+  - table_name: rag_quota_policies
+    class: shared-owned
+    write_owner: Herman-Admin
+    readers: [Herman-Admin, herman-prompt, prompt_transformer]
+    authority_status: authoritative
+    lifecycle: persistent
+    notes: Canonical RAG quota policy table resolved by runtime precedence across default, service tier, and tenant override scopes.
+  - table_name: rag_collections
+    class: shared-owned
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, Herman-Admin, herman-prompt]
+    authority_status: authoritative
+    lifecycle: persistent
+    notes: Canonical collection registry for tenant-scoped knowledge and user-scoped personal context repositories.
+  - table_name: rag_documents
+    class: shared-owned
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, Herman-Admin, herman-prompt]
+    authority_status: authoritative
+    lifecycle: persistent
+    notes: Canonical uploaded document metadata for RAG sources across tenant and user scopes.
+  - table_name: rag_document_blobs
+    class: shared-owned
+    write_owner: prompt_transformer
+    readers: [prompt_transformer]
+    authority_status: authoritative
+    lifecycle: retention_policy_required
+    notes: Source file bytes retained in the shared database for v1 RAG ingestion.
+  - table_name: rag_chunks
+    class: derived
+    write_owner: prompt_transformer
+    readers: [prompt_transformer]
+    authority_status: derived
+    lifecycle: recomputable
+    notes: Chunked document text and derived embedding payloads used by RAG retrieval.
+  - table_name: rag_retrieval_events
+    class: derived
+    write_owner: prompt_transformer
+    readers: [prompt_transformer, Herman-Admin]
+    authority_status: derived
+    lifecycle: retention_policy_required
+    notes: Retrieval event log recording which chunks contributed to runtime context assembly.
   - table_name: conversations
     class: shared-owned
     write_owner: herman-prompt
