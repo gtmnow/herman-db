@@ -5,7 +5,7 @@ fields:
     email: authoritative
     display_name: authoritative
     tenant_id: derived_primary_tenant_pointer
-    is_admin: deprecated_authority
+    is_admin: removed_20260505_0013
   admin_users:
     user_id_hash: authoritative
     role: authoritative
@@ -50,3 +50,11 @@ fields:
     prompt_enforcement_level: derived
     compliance_check_enabled: derived
     pii_check_enabled: derived
+  tenant_llm_config:
+    tenant_id: authoritative
+    credential_mode: authoritative
+    credential_status: authoritative
+    platform_managed_config_id: authoritative_when_platform_managed
+    provider_type: customer_managed_only
+    model_name: customer_managed_only
+    endpoint_url: customer_managed_only
