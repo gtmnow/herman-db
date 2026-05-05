@@ -2,9 +2,11 @@
 
 ## Cleanup Targets
 
-- `password_reset_tokens`: align schema with portal code
-- `user_invitations`: separate current-state semantics from historical duplication
-- `admin_users`: enforce referential integrity to `auth_users`
+- `password_reset_tokens`: aligned with portal code on `user_id_hash`
+- `user_invitations`: current-state semantics normalized via `is_current`
+- `admin_users`: referential integrity enforced to `auth_users`
 - `admin_profiles`: retired by `20260505_0013`; identity now lives in `auth_users`
-- `final_profile`: document recompute-only lifecycle
-- `conversation_prompt_scores`: define orphan retention/cleanup policy
+- `final_profile`: recompute-only lifecycle normalized in `20260505_0011`
+- `conversation_prompt_scores`: orphan retention policy normalized with explicit deletion markers
+- `user_membership_profiles`: narrowed to membership-specific metadata only in `20260505_0014`
+- `reseller_tenant_defaults`: platform-managed defaults normalized to stop storing duplicated provider/model/endpoint fields in `20260505_0014`

@@ -22,10 +22,14 @@ fields:
     accepted_at: authoritative
     revoked_at: authoritative
   password_reset_tokens:
-    user_id: live_schema_field_pending_cleanup
+    user_id_hash: authoritative
     token_hash: authoritative
     expires_at: authoritative
     used_at: authoritative
+  user_membership_profiles:
+    tenant_membership_id: authoritative
+    title: authoritative
+    initial_user_type: authoritative
   type_detail:
     user_id_hash: authoritative
     structure: authoritative
@@ -58,3 +62,15 @@ fields:
     provider_type: customer_managed_only
     model_name: customer_managed_only
     endpoint_url: customer_managed_only
+  reseller_tenant_defaults:
+    reseller_partner_id: authoritative
+    default_service_tier_definition_id: authoritative
+    default_reporting_timezone: authoritative
+    default_service_mode: authoritative
+    default_enforcement_mode: authoritative
+    default_feature_flags_json: authoritative
+    default_credential_mode: authoritative
+    default_platform_managed_config_id: authoritative_when_platform_managed
+    default_provider_type: customer_managed_only
+    default_model_name: customer_managed_only
+    default_endpoint_url: customer_managed_only

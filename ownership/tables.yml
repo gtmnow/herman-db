@@ -5,9 +5,9 @@ tables:
     class: core
     write_owner: shared
     readers: [Herman-Admin, herman_portal, herman-prompt, prompt_transformer]
-    authority_status: shared_but_duplicated
+    authority_status: authoritative_with_derived_pointer
     lifecycle: persistent
-    notes: Canonical platform identity table; tenant and admin authority require cleanup.
+    notes: Canonical platform identity table; auth_users.tenant_id is a derived compatibility pointer synced from primary membership.
   - table_name: admin_users
     class: core
     write_owner: Herman-Admin
@@ -26,16 +26,16 @@ tables:
     class: shared-owned
     write_owner: Herman-Admin
     readers: [herman_portal]
-    authority_status: ambiguous_current_state
+    authority_status: current_state_plus_history
     lifecycle: current_state_plus_history
-    notes: Needs cleanup to resolve duplicate current-state/history behavior.
+    notes: Current-state semantics are explicit via is_current while historical invitation rows are retained.
   - table_name: password_reset_tokens
     class: app-local
     write_owner: herman_portal
     readers: [herman_portal]
-    authority_status: schema_drifted
+    authority_status: authoritative
     lifecycle: expiring
-    notes: Portal-only token table with live schema/code mismatch.
+    notes: Portal-only token table aligned on canonical user_id_hash authority.
   - table_name: type_detail
     class: core
     write_owner: prompt_transformer
@@ -56,7 +56,21 @@ tables:
     readers: [prompt_transformer, herman-prompt, Herman-Admin]
     authority_status: derived
     lifecycle: retention_policy_required
-    notes: Derived analytics with orphaned-row cleanup needed.
+    notes: Derived analytics retained with explicit orphan markers instead of unmanaged dangling rows.
+  - table_name: user_membership_profiles
+    class: shared-owned
+    write_owner: Herman-Admin
+    readers: [Herman-Admin]
+    authority_status: membership_metadata_only
+    lifecycle: persistent
+    notes: Narrow membership metadata table; identity and usage analytics are derived from canonical auth and conversation/profile tables.
+  - table_name: reseller_tenant_defaults
+    class: shared-owned
+    write_owner: Herman-Admin
+    readers: [Herman-Admin]
+    authority_status: normalized_template
+    lifecycle: persistent
+    notes: Template layer remains intentionally parallel to tenant runtime tables, but platform-managed LLM defaults no longer store duplicated provider/model/endpoint values.
   - table_name: conversations
     class: shared-owned
     write_owner: herman-prompt
