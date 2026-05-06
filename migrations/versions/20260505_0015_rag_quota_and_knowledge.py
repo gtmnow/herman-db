@@ -204,7 +204,7 @@ def upgrade() -> None:
             )
             SELECT
               'rag-policy-global-default-v1',
-              :policy_key,
+              CAST(:policy_key AS VARCHAR(100)),
               'global_default',
               NULL,
               NULL,
@@ -228,7 +228,7 @@ def upgrade() -> None:
             WHERE NOT EXISTS (
               SELECT 1
               FROM rag_quota_policies
-              WHERE policy_key = :policy_key
+              WHERE policy_key = CAST(:policy_key AS VARCHAR(100))
             )
             """
         ),
